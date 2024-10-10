@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>We would love to hear from you!</h1>
+    
+    <div>
+        <h3>I want to know where my order is:</h3>
+        <label for="orderID">Order ID:</label>
+        <input type="text" id="orderID"><br>
+        <button id="trackOrderBtn">Track Order</button>
+        <p id="orderStatus"></p>
+    </div>
+
+    <div>
+        <h3>I want to return something:</h3>
+        <label for="returnOrderID">Order ID:</label>
+        <input type="text" id="returnOrderID"><br>
+        <label for="returnReason">Reason:</label>
+        <input type="text" id="returnReason"><br>
+        <button id="returnOrderBtn">Return</button>
+        <p id="returnStatus"></p>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore-compat.js"></script>
+    <script src="contact.js"></script>
+</body>
+</html>

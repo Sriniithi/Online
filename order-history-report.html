@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order History Report</title>
+</head>
+<body>
+    <h1>Order History Report</h1>
+
+    <button onclick="generateOrderHistoryReport()">Generate Order History Report</button>
+
+    <a id="downloadLink" style="display: none;">Download CSV</a>
+
+    <div id="reportMessage"></div>
+
+    <script>
+        const FIREBASE_ORDER_HISTORY_URL = 'https://firestore.googleapis.com/v1/projects/onlineshopping-31b9b/databases/(default)/documents/order history';
+
+        // Function to generate the order history report
+        async function generateOrderHistoryReport() {
+            try {
+                // Fetch the order history from Firestore
+                const response = await fetch(FIREBASE_ORDER_HISTORY_URL);
+                const data = await response.json();
+                const orders = [];
+
+                if (data.documents) {
+                    // Loop through the order history and format the data for CSV output
+                    data.documents.forEach(doc => {
+                        const order = doc.fields;
+                        const orderDate = new Date(order.timestamp.timestampValue);
+
+                        // Format the order for CSV output
+                        const formattedOrder = {
+                            date: orderDate.toLocaleString(),
+                            items: order.items.arrayValue.values.map(item => {
+                                const itemData = item.mapValue.fields;
+                                return `${itemData.name.stringValue} - $${itemData.price.doubleValue}`;
+                            }).join('; '),
+                            totalAmount: order.items.arrayValue.values.reduce((sum, item) => {
+                                const itemData = item.mapValue.fields;
+                                return sum + itemData.price.doubleValue;
+                            }, 0),
+                            cardNumber: order.payment.mapValue.fields.cardNumber.stringValue
+                        };
+                        orders.push(formattedOrder);
+                    });
+
+                    if (orders.length > 0) {
+                        // Sort orders by the date
+                        orders.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                        // Generate CSV file
+                        const csvContent = generateCSV(orders);
+                        downloadCSV(csvContent, 'order_history_report.csv');
+                    } else {
+                        document.getElementById('reportMessage').innerText = 'No orders found in the order history.';
+                    }
+                } else {
+                    document.getElementById('reportMessage').innerText = 'No orders available.';
+                }
+
+            } catch (error) {
+                console.error('Error fetching orders:', error);
+                document.getElementById('reportMessage').innerText = 'Error generating order history report.';
+            }
+        }
+
+        // Function to generate CSV content
+        function generateCSV(orders) {
+            const header = ['Date', 'Items', 'Total Amount', 'Card Number'];
+            const rows = orders.map(order => [order.date, `"${order.items}"`, `$${order.totalAmount}`, order.cardNumber]);
+
+            let csvContent = header.join(',') + '\n';
+            rows.forEach(row => {
+                csvContent += row.join(',') + '\n';
+            });
+
+            return csvContent;
+        }
+
+        // Function to download the CSV file
+        function downloadCSV(csvContent, fileName) {
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const link = document.getElementById('downloadLink');
+            link.href = URL.createObjectURL(blob);
+            link.download = fileName;
+            link.style.display = 'block';
+            link.innerText = 'Download CSV';
+        }
+    </script>
+</body>
+</html>
